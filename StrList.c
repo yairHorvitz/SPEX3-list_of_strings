@@ -60,7 +60,8 @@ size_t StrList_size(const StrList* list) {
 
 void StrList_insertLast(StrList* StrList, const char* data){
     if(StrList->_head == NULL){
-        StrList->_head= Node_alloc(data,StrList->_head);
+        Node* p1 = StrList->_head;
+        StrList->_head= Node_alloc(data,p1);
     }
     else{
         Node* p = StrList->_head;
@@ -216,26 +217,60 @@ else{
 }
 }
 /*
+
  * Clones the given StrList. 
  * It's the user responsibility to free it with StrList_free.
  */
-StrList* StrList_clone(const StrList* StrList)
-{
-StrList* copy = StrList_alloc();
- return copy; 
+
+StrList *StrList_clone(const StrList *list) {
+  StrList *clone = StrList_alloc();  // allocate memory for the clone
+
+  // set the size of the clone to the size of the list
+  clone->_size = list->_size;
+
+  // temp pointer to loop through the list
+  const Node *old = list->_head;
+
+  // copy pointer to loop through the clone
+  Node **copy = &(clone->_head);
+
+  // loop through the list and copy the data of each node to the clone
+  while (old != NULL) {
+    // allocate memory for the new node and copy the data of the current node
+    *copy = Node_alloc(old->_data, NULL);
+    // if malloc fails, free the memory allocated to the nodes and the list
+    if (*copy == NULL) {
+      StrList_free(clone);
+      return NULL;
+    }
+    // continue to the next node
+    old = old->_next;
+
+    // point to the next node of the clone
+    copy = &((*copy)->_next);
+  }
+  return;
 }
 
 
 
+
 void StrList_reverse(StrList* Strlist){ 
+    if (Strlist->_size==1||Strlist->_size==0){return Strlist;}
     Node* preversed = Strlist->_head;
     Node* p1 = Strlist->_head->_next;
-    Node* p2 = p1->_next ;
     Strlist -> _head = p1;
-    
-     for (size_t i = 0; i < Strlist->_size; i++){
-        p2 = p2->_data;
+    Node* p2 = Strlist -> _head->_next;
+    preversed->_next = NULL;
+
+    for (size_t i = 0; i < Strlist->_size-1; i++){
+        Strlist -> _head = p2;
+        p1->_next= preversed;
+        preversed=p1;
+        p1=Strlist->_head;
+        p2= Strlist->_head->_next;
     }
+    return preversed;
 
 
     }
@@ -261,3 +296,46 @@ Node* p2 = StrList->_head->_next;
     }
  }
 }
+
+int StrList_isSorted(StrList *list) {
+  Node *temp = list->_head;
+
+  if (temp == NULL) return 1;
+  while (temp->_next != NULL) {
+    if (strcmp(temp->_data, temp->_next->_data) > 0) {
+      return 0;
+    }
+    temp = temp->_next;
+  }
+  return 1;
+}
+
+void swapNodes(Node *a, Node *b) {
+  char *temp = a->_data;
+  a->_data = b->_data;
+  b->_data = temp;
+}
+
+void bubbleSort(StrList *list) {
+  int swapped;
+  Node *ptr1;
+  Node *lptr = NULL;
+
+  if (list->_head == NULL) return;
+
+  do {
+    swapped = 0;
+    ptr1 = list->_head;
+
+    while (ptr1->_next != lptr) {
+      if (strcmp(ptr1->_data, ptr1->_next->_data) > 0) {
+        swapNodes(ptr1, ptr1->_next);
+        swapped = 1;
+      }
+      ptr1 = ptr1->_next;
+    }
+    lptr = ptr1;
+  } while (swapped);
+}
+
+void StrList_sort(StrList *list) { bubbleSort(list); }
